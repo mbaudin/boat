@@ -124,6 +124,8 @@ export const BoatCalendar = ({ currentOwnerId, bookings, maintenance, initialDat
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
         initialDate={initialDate}
+        firstDay={1}
+        weekNumbers
         selectable
         select={onSelect}
         events={events}
