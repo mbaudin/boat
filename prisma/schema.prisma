@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Owner {
+  id               String             @id @default(cuid())
+  email            String             @unique
+  name             String
+  displayColor     String
+  icsToken         String             @unique
+  createdAt        DateTime           @default(now())
+  bookings         Booking[]
+  approvals        Approval[]
+  allocations      WeekAllocation[]
+  maintenance      MaintenanceBlock[]
+  auditLogs        AuditLog[]
+}
+
+model WeekAllocation {
+  id       String @id @default(cuid())
+  year     Int
+  isoWeek  Int
+  ownerId  String
+  owner    Owner  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([year, isoWeek])
+  @@index([year])
+}
+
+model Booking {
+  id                   String    @id @default(cuid())
+  ownerId              String
+  owner                Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  startDate            DateTime
+  endDate              DateTime
+  type                 String
+  status               String
+  notes                String?
+  gcalEventId          String?
+  requiredApproverIds  String    @default("")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  approvals            Approval[]
+
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+model Approval {
+  id               String   @id @default(cuid())
+  bookingId        String
+  booking          Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  approverOwnerId  String
+  approver         Owner    @relation(fields: [approverOwnerId], references: [id], onDelete: Cascade)
+  decision         String
+  decidedAt        DateTime @default(now())
+
+  @@unique([bookingId, approverOwnerId])
+}
+
+model MaintenanceBlock {
+  id               String   @id @default(cuid())
+  startDate        DateTime
+  endDate          DateTime
+  reason           String
+  createdByOwnerId String
+  createdBy        Owner    @relation(fields: [createdByOwnerId], references: [id], onDelete: Cascade)
+  gcalEventId      String?
+  createdAt        DateTime @default(now())
+
+  @@index([startDate, endDate])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorOwnerId  String
+  actor         Owner    @relation(fields: [actorOwnerId], references: [id], onDelete: Cascade)
+  action        String
+  entityType    String
+  entityId      String
+  payload       String
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
