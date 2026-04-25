@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db'
 import { validateNewRequest } from '@/lib/bookings/validate'
 import { writeAuditLog } from '@/lib/audit'
 import { sendEmail, bookingRequestEmail } from '@/lib/email'
+import { notify } from '@/lib/notifications'
 import { toDate, formatDate, rangesOverlap } from '@/lib/dates'
 import { env } from '@/lib/env'
 
@@ -91,6 +92,15 @@ export const POST = async (req: Request): Promise<Response> => {
       approveUrl,
     ),
   })
+  await notify(
+    affectedOwners.map((o) => ({
+      ownerId: o.id,
+      kind: 'REQUEST_RECEIVED' as const,
+      title: `${booking.owner.name} wants ${formatDate(startDate)} → ${formatDate(endDate)}`,
+      body: notes ?? 'No note. Open Requests to approve or reject.',
+      link: '/requests',
+    })),
+  )
 
   return NextResponse.json(booking, { status: 201 })
 }

@@ -2,14 +2,21 @@
 
 import Link from 'next/link'
 import { AppBar, Badge, Box, Button, Toolbar, Typography } from '@mui/material'
+import { NotificationsBell } from './NotificationsBell'
 
 interface Props {
   ownerName: string
   signOutAction: () => Promise<void>
   pendingCount: number
+  unreadNotificationCount: number
 }
 
-export const NavBar = ({ ownerName, signOutAction, pendingCount }: Props): React.ReactNode => {
+export const NavBar = ({
+  ownerName,
+  signOutAction,
+  pendingCount,
+  unreadNotificationCount,
+}: Props): React.ReactNode => {
   return (
     <AppBar position="static" color="default" elevation={1}>
       <Toolbar sx={{ gap: 2 }}>
@@ -27,6 +34,7 @@ export const NavBar = ({ ownerName, signOutAction, pendingCount }: Props): React
         <Button component={Link} href="/maintenance">Maintenance</Button>
         <Button component={Link} href="/settings">Settings</Button>
         <Box sx={{ flexGrow: 1 }} />
+        <NotificationsBell initialUnreadCount={unreadNotificationCount} />
         <Typography variant="body2" color="text.secondary">{ownerName}</Typography>
         <form action={signOutAction}>
           <Button type="submit" size="small">Sign out</Button>

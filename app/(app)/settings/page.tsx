@@ -3,6 +3,7 @@ import { DateTime } from 'luxon'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { env } from '@/lib/env'
+import { isAdminOwnerId } from '@/lib/admin'
 import { SettingsClient } from '@/components/Settings/SettingsClient'
 
 export default async function SettingsPage(): Promise<React.ReactNode> {
@@ -11,6 +12,7 @@ export default async function SettingsPage(): Promise<React.ReactNode> {
     return null
   }
   const owner = await prisma.owner.findUniqueOrThrow({ where: { id: session.user.ownerId } })
+  const isAdmin = await isAdminOwnerId(owner.id)
   const auditEntries = await prisma.auditLog.findMany({
     orderBy: { createdAt: 'desc' },
     take: 50,
@@ -70,7 +72,12 @@ export default async function SettingsPage(): Promise<React.ReactNode> {
               )
             })}
           </Stack>
-          <SettingsClient currentYear={currentYear} />
+          {isAdmin && <SettingsClient currentYear={currentYear} />}
+          {!isAdmin && (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
+              Year rollover is admin-only.
+            </Typography>
+          )}
         </Paper>
 
         <Paper sx={{ p: 3 }}>

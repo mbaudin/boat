@@ -6,6 +6,7 @@ import { computeRotation } from '@/lib/rotation'
 import { isoWeekToDateRange } from '@/lib/dates'
 import { createGcalEvent } from '@/lib/gcal'
 import { writeAuditLog } from '@/lib/audit'
+import { isAdminOwnerId } from '@/lib/admin'
 import { DateTime } from 'luxon'
 
 export const GET = async (
@@ -34,6 +35,9 @@ export const POST = async (
   const session = await auth()
   if (!session?.user.ownerId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  if (!(await isAdminOwnerId(session.user.ownerId))) {
+    return NextResponse.json({ error: 'Only the admin can set up a year' }, { status: 403 })
   }
   const { year: yearStr } = await context.params
   const year = parseInt(yearStr, 10)

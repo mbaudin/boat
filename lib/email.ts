@@ -69,6 +69,20 @@ export const bookingRejectedEmail = (
   html: `<p>${rejecterName} rejected ${requesterName}'s request for ${startIso} – ${endIso}.</p>`,
 })
 
+export const bookingApprovedProgressEmail = (
+  approverName: string,
+  startIso: string,
+  endIso: string,
+  remaining: number,
+): { subject: string, html: string } => ({
+  subject: `${approverName} approved your request (${startIso} – ${endIso})`,
+  html: `<p>${approverName} approved your request for <strong>${startIso} – ${endIso}</strong>.</p>${
+    remaining > 0
+      ? `<p>${remaining} more approval${remaining === 1 ? '' : 's'} needed before this is confirmed.</p>`
+      : '<p>Fully approved — confirming now.</p>'
+  }`,
+})
+
 export const bookingCancelledEmail = (
   ownerName: string,
   startIso: string,

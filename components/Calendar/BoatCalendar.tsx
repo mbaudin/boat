@@ -162,7 +162,7 @@ export const BoatCalendar = ({ currentOwnerId, bookings, maintenance, initialDat
               <TextField {...register('notes')} label="Notes (optional)" multiline minRows={2} fullWidth />
               {error && <Typography color="error" variant="body2">{error}</Typography>}
               <Typography variant="caption" color="text.secondary">
-                Both other owners must approve before this is confirmed.
+                The owner(s) currently booked for these days will be asked to approve.
               </Typography>
             </Stack>
           </DialogContent>

@@ -25,6 +25,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     return required.includes(owner.id) && !alreadyDecided
   }).length
 
+  const unreadNotificationCount = await prisma.notification.count({
+    where: { ownerId: owner.id, readAt: null },
+  })
+
   const signOutAction = async (): Promise<void> => {
     'use server'
     await signOut({ redirectTo: '/sign-in' })
@@ -36,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         ownerName={owner.name}
         signOutAction={signOutAction}
         pendingCount={myPendingCount}
+        unreadNotificationCount={unreadNotificationCount}
       />
       <Container maxWidth="lg" sx={{ py: 3 }}>
         {children}

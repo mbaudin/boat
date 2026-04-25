@@ -9,7 +9,9 @@ import {
   sendEmail,
   bookingConfirmedEmail,
   bookingRejectedEmail,
+  bookingApprovedProgressEmail,
 } from '../email'
+import { notify } from '../notifications'
 import { formatDate, rangesOverlap } from '../dates'
 
 const maxDate = (a: Date, b: Date): Date => (a > b ? a : b)
@@ -67,6 +69,13 @@ export const applyApproval = async (
           rejecter.name,
         ),
       })
+      await notify({
+        ownerId: booking.ownerId,
+        kind: 'REQUEST_REJECTED',
+        title: `${rejecter.name} rejected your request`,
+        body: `${formatDate(booking.startDate)} → ${formatDate(booking.endDate)}`,
+        link: '/requests',
+      })
       return updated
     }
 
@@ -75,13 +84,31 @@ export const applyApproval = async (
     })
     const approvedIds = new Set(_.map(approvals, 'approverOwnerId'))
     const allApproved = requiredApproverIds.every((id) => approvedIds.has(id))
+    const approver = await tx.owner.findUniqueOrThrow({ where: { id: approverOwnerId } })
     if (!allApproved) {
+      const remaining = requiredApproverIds.length - approvedIds.size
       await writeAuditLog({
         actorOwnerId: approverOwnerId,
         action: 'BOOKING_APPROVED',
         entityType: 'Booking',
         entityId: bookingId,
         payload: { progress: `${approvedIds.size}/${requiredApproverIds.length}` },
+      })
+      await sendEmail({
+        to: booking.owner.email,
+        ...bookingApprovedProgressEmail(
+          approver.name,
+          formatDate(booking.startDate),
+          formatDate(booking.endDate),
+          remaining,
+        ),
+      })
+      await notify({
+        ownerId: booking.ownerId,
+        kind: 'REQUEST_APPROVED',
+        title: `${approver.name} approved your request`,
+        body: `${formatDate(booking.startDate)} → ${formatDate(booking.endDate)} — ${remaining} more approval${remaining === 1 ? '' : 's'} needed`,
+        link: '/requests',
       })
       return booking
     }
@@ -116,6 +143,13 @@ export const applyApproval = async (
         formatDate(booking.startDate),
         formatDate(booking.endDate),
       ),
+    })
+    await notify({
+      ownerId: booking.ownerId,
+      kind: 'REQUEST_CONFIRMED',
+      title: 'Your request is confirmed',
+      body: `${formatDate(booking.startDate)} → ${formatDate(booking.endDate)}`,
+      link: '/',
     })
     return confirmed
   })

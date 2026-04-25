@@ -13,6 +13,14 @@ export const env = {
   appBaseUrl: (): string => optional('APP_BASE_URL', 'http://localhost:3000'),
   ownerEmails: (): string[] =>
     optional('OWNER_EMAILS').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
+  adminEmails: (): string[] => {
+    const explicit = optional('ADMIN_EMAILS').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+    if (explicit.length > 0) {
+      return explicit
+    }
+    const owners = optional('OWNER_EMAILS').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+    return owners.length > 0 ? [owners[0]] : []
+  },
   googleClientId: (): string => required('GOOGLE_CLIENT_ID'),
   googleClientSecret: (): string => required('GOOGLE_CLIENT_SECRET'),
   authSecret: (): string => required('NEXTAUTH_SECRET'),
